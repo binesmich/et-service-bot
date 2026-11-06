@@ -8,27 +8,27 @@
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); }
         .btn { width: 100%; padding: 12px; margin: 10px 0; background: #0088cc; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-        input, select { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
+        input, select { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
-    <h2>ET-Service አገልጋይና ደንበኛ ማገናኛ</h2>
-    
+    <h2>ET-Service አገልግሎት ማግኘት</h2>
+
     <div id="role-selection">
         <button class="btn" onclick="showForm('client')">አገልግሎት እፈልጋለሁ (ደንበኛ)</button>
-        <button class="btn" onclick="showForm('worker')">ለመስራት እመዘገባለሁ (ሰራተኛ)</button>
+        <button class="btn" onclick="showForm('worker')">ለሰራተኛ እመዝገብላለሁ (ሰራተኛ)</button>
     </div>
 
-    <form id="worker-form" style="display:none;" onsubmit="submitWorker(event)">
-        <h3>የሰራተኛ ምዝገባ</h3>
+    <form id="worker-form" style="display: none;" onsubmit="submitworker(event)">
+        <h3>ሰራተኛ ማስተዋወቂያ</h3>
         <input type="text" id="phone" placeholder="ስልክ ቁጥር" required>
         <select id="skill" required>
-            <option value="">የሙያ ዘርፍ ይምረጡ</option>
-            <option value="technician">ኤሌክትሮኒክስ ጥገና</option>
-            <option value="plumber">የቧንቧ ስራ</option>
+            <option value="">ሙያ ይምረጡ</option>
+            <option value="technician">ቴክኒሻን</option>
+            <option value="plumber">ፕለምበር</option>
             <option value="cleaner">ጽዳት</option>
         </select>
-        <button type="submit" class="btn">መዝግበኝ</button>
+        <button type="submit" class="btn">ምዝገባ ጨርስ</button>
     </form>
 
     <script>
@@ -36,30 +36,35 @@
         tg.expand();
 
         function showForm(role) {
-            if(role === 'worker') {
-                document.getElementById('role-selection').style.display = 'none';
+            document.getElementById('role-selection').style.display = 'none';
+            if (role === 'worker') {
                 document.getElementById('worker-form').style.display = 'block';
+            } else if (role === 'client') {
+                alert('የደንበኛ አገልግሎት በቅርቡ ይጀመራል!');
+                location.reload();
             }
         }
 
-        async function submitWorker(e) {
+        async function submitworker(e) {
             e.preventDefault();
             const userData = {
-                tg_id: tg.initDataUnsafe.user?.id,
-                name: tg.initDataUnsafe.user?.first_name,
+                tg_id: tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 123456,
+                name: tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "User",
                 phone: document.getElementById('phone').value,
                 skill: document.getElementById('skill').value
             };
 
             const response = await fetch('/api/register-worker', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(userData)
             });
 
             if (response.ok) {
-                tg.showAlert("ምዝገባዎ ተሳክቷል!");
-                tg.close();
+                tg.showAlert("ምዝገባ ተሳክቷል!");
+                // አፑ እንዳይዘጋ ተደርጓል፣ አስፈላጊ ከሆነ ቆይተው tg.close() ማድረግ ይቻላል
+            } else {
+                tg.showAlert("ምዝገባው አልተሳካም, እንደገና ይሞክሩ።");
             }
         }
     </script>
