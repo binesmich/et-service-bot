@@ -2,157 +2,432 @@
 <html lang="am">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ET-Service</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ET-Service — ገበያ</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--tg-theme-bg-color, #ffffff);
-    color: var(--tg-theme-text-color, #000000);
-    padding: 16px;
-    min-height: 100vh;
-    transition: background 0.3s;
-  }
-  .container { max-width: 500px; margin: 0 auto; }
+/* ===== ሪሴት & ተለዋዋጮች ===== */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f7f8fa; --card:#ffffff; --text:#111827; --muted:#6b7280;
+  --line:#eceef2; --primary:#2ea6ff; --primary-dark:#1a8ae8;
+  --accent:#ff6b35; --success:#10b981; --shadow:0 2px 12px rgba(0,0,0,.06);
+  --radius:16px; --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+[data-theme="dark"]{
+  --bg:#0f1419; --card:#1a2029; --text:#f3f4f6; --muted:#9ca3af;
+  --line:#2a313d; --shadow:0 2px 12px rgba(0,0,0,.4);
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg); color:var(--text);
+  min-height:100vh; overflow-x:hidden;
+  transition:background .3s,color .3s;
+  padding-bottom:calc(80px + var(--safe-bottom));
+}
+img{display:block;max-width:100%}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;outline:none}
 
-  /* Header */
-  .header {
-    text-align: center;
-    padding: 20px 0;
-    border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
-    margin-bottom: 20px;
-  }
-  .header h1 { font-size: 24px; margin-bottom: 6px; }
-  .header p { color: var(--tg-theme-hint-color, #888); font-size: 14px; }
+/* ===== አኒሜሽን ===== */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.fade-up{animation:fadeUp .4s ease both}
+.scale-in{animation:scaleIn .3s ease both}
 
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    background: var(--tg-theme-secondary-bg-color, #f5f5f5);
-    padding: 4px;
-    border-radius: 12px;
-  }
-  .tab {
-    flex: 1;
-    padding: 12px;
-    text-align: center;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--tg-theme-hint-color, #888);
-    transition: all 0.2s;
-    border: none;
-    background: transparent;
-  }
-  .tab.active {
-    background: var(--tg-theme-button-color, #2ea6ff);
-    color: var(--tg-theme-button-text-color, #ffffff);
-  }
+/* ===== ሄደር ===== */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  background:var(--card);border-bottom:1px solid var(--line);
+  padding:12px 16px;display:flex;align-items:center;gap:12px;
+  backdrop-filter:blur(12px);
+}
+.logo{display:flex;align-items:center;gap:10px;flex:1}
+.logo-icon{
+  width:38px;height:38px;border-radius:11px;
+  background:linear-gradient(135deg,#2ea6ff,#7c5cff);
+  display:grid;place-items:center;font-size:20px;
+  box-shadow:0 4px 12px rgba(46,166,255,.3);
+}
+.logo-text{font-weight:800;font-size:17px;letter-spacing:-.3px}
+.logo-text small{display:block;font-size:10px;color:var(--muted);font-weight:500}
+.icon-btn{
+  width:40px;height:40px;border-radius:12px;
+  display:grid;place-items:center;font-size:19px;
+  background:var(--bg);transition:transform .15s,background .2s;
+}
+.icon-btn:active{transform:scale(.9)}
 
-  /* Forms */
-  .form-panel { display: none; }
-  .form-panel.active { display: block; animation: fadeIn 0.3s; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/* ===== ፍለጋ ===== */
+.search-wrap{padding:12px 16px 8px}
+.search-box{
+  display:flex;align-items:center;gap:10px;
+  background:var(--card);border:1px solid var(--line);
+  border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);
+}
+.search-box span{font-size:17px;opacity:.6}
+.search-box input{flex:1;border:none;background:none;font-size:15px;color:var(--text)}
+.search-box input::placeholder{color:var(--muted)}
 
-  .form-group { margin-bottom: 16px; }
-  .form-group label {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 14px;
-    font-weight: 500;
-  }
-  .form-group input,
-  .form-group select,
-  .form-group textarea {
-    width: 100%;
-    padding: 14px;
-    border: 1px solid var(--tg-theme-hint-color, #ddd);
-    border-radius: 10px;
-    background: var(--tg-theme-secondary-bg-color, #f9f9f9);
-    color: var(--tg-theme-text-color, #000);
-    font-size: 15px;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .form-group input:focus,
-  .form-group select:focus,
-  .form-group textarea:focus {
-    border-color: var(--tg-theme-button-color, #2ea6ff);
-  }
-  .form-group textarea { resize: vertical; min-height: 80px; }
+/* ===== ካታጎሪዎች ===== */
+.cats{
+  display:flex;gap:10px;overflow-x:auto;padding:8px 16px 16px;
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+.cats::-webkit-scrollbar{display:none}
+.cat{
+  flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:12px 14px;background:var(--card);border:1px solid var(--line);
+  border-radius:14px;min-width:78px;transition:all .2s;
+}
+.cat:active{transform:scale(.94)}
+.cat.active{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 6px 18px rgba(46,166,255,.3)}
+.cat .emoji{font-size:24px}
+.cat .name{font-size:11px;font-weight:600;white-space:nowrap}
 
-  /* Button */
-  .btn {
-    width: 100%;
-    padding: 16px;
-    background: var(--tg-theme-button-color, #2ea6ff);
-    color: var(--tg-theme-button-text-color, #fff);
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: opacity 0.2s;
-  }
-  .btn:active { opacity: 0.7; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+/* ===== አድቫርታይዝመንት ===== */
+.banner{
+  margin:0 16px 16px;padding:20px;border-radius:var(--radius);
+  background:linear-gradient(135deg,#2ea6ff,#7c5cff);
+  color:#fff;position:relative;overflow:hidden;
+  box-shadow:0 8px 24px rgba(46,166,255,.25);
+}
+.banner::after{
+  content:'';position:absolute;right:-30px;top:-30px;
+  width:140px;height:140px;border-radius:50%;
+  background:rgba(255,255,255,.15);
+}
+.banner h2{font-size:17px;margin-bottom:6px;position:relative}
+.banner p{font-size:13px;opacity:.9;position:relative}
+.banner .btn-banner{
+  margin-top:12px;padding:9px 18px;background:#fff;color:var(--primary);
+  border-radius:10px;font-weight:700;font-size:13px;position:relative;
+  transition:transform .15s;
+}
+.banner .btn-banner:active{transform:scale(.95)}
 
-  /* Status message */
-  .status {
-    padding: 14px;
-    border-radius: 10px;
-    margin-top: 16px;
-    font-size: 14px;
-    text-align: center;
-    display: none;
-  }
-  .status.success { background: #d4edda; color: #155724; display: block; }
-  .status.error { background: #f8d7da; color: #721c24; display: block; }
-  .status.loading { background: #d1ecf1; color: #0c5460; display: block; }
+/* ===== ሰክሽን ርዕስ ===== */
+.section-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:4px 16px 12px;
+}
+.section-head h3{font-size:16px;font-weight:700}
+.section-head a{font-size:13px;color:var(--primary);font-weight:600;text-decoration:none}
 
-  /* Footer */
-  .footer {
-    text-align: center;
-    padding: 20px 0;
-    color: var(--tg-theme-hint-color, #888);
-    font-size: 12px;
-  }
+/* ===== ካርዶች (ምርቶች/ሰራተኞች) ===== */
+.grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:12px;
+  padding:0 16px;
+}
+.card{
+  background:var(--card);border-radius:var(--radius);
+  overflow:hidden;border:1px solid var(--line);
+  box-shadow:var(--shadow);transition:transform .15s,box-shadow .2s;
+  animation:fadeUp .4s ease both;
+}
+.card:active{transform:scale(.97)}
+.card-img{
+  height:130px;background:linear-gradient(135deg,#e0e7ff,#f0f4ff);
+  display:grid;place-items:center;font-size:44px;position:relative;
+}
+[data-theme="dark"] .card-img{background:linear-gradient(135deg,#2a3140,#1f2530)}
+.card-img .badge{
+  position:absolute;top:8px;left:8px;
+  background:var(--accent);color:#fff;font-size:10px;font-weight:700;
+  padding:4px 8px;border-radius:6px;
+}
+.card-body{padding:10px 12px 12px}
+.card-title{font-size:14px;font-weight:600;margin-bottom:4px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-price{font-size:15px;font-weight:800;color:var(--primary);margin-bottom:4px}
+.card-meta{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.card-rating{font-size:11px;color:#f59e0b;font-weight:600;margin-top:4px}
+
+/* ===== ሰራተኛ ካርድ ===== */
+.worker-card{
+  display:flex;gap:12px;align-items:center;
+  background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius);padding:12px;margin:0 16px 10px;
+  box-shadow:var(--shadow);transition:transform .15s;
+  animation:fadeUp .4s ease both;
+}
+.worker-card:active{transform:scale(.98)}
+.avatar{
+  width:52px;height:52px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#2ea6ff,#7c5cff);
+  display:grid;place-items:center;color:#fff;font-size:22px;font-weight:700;
+}
+.worker-info{flex:1;min-width:0}
+.worker-info h4{font-size:14px;font-weight:700;margin-bottom:2px}
+.worker-info .skill{font-size:12px;color:var(--primary);font-weight:600;margin-bottom:3px}
+.worker-info .loc{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:3px}
+.worker-actions{display:flex;flex-direction:column;gap:6px}
+.btn-sm{
+  padding:7px 12px;border-radius:9px;font-size:11px;font-weight:700;
+  transition:transform .15s;white-space:nowrap;
+}
+.btn-sm:active{transform:scale(.94)}
+.btn-call{background:var(--success);color:#fff}
+.btn-view{background:var(--bg);color:var(--text);border:1px solid var(--line)}
+
+/* ===== ታች ናቪጌሽን ===== */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:60;
+  background:var(--card);border-top:1px solid var(--line);
+  display:flex;padding:8px 0 calc(8px + var(--safe-bottom));
+  box-shadow:0 -4px 20px rgba(0,0,0,.06);
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 0;color:var(--muted);transition:color .2s;position:relative;
+}
+.nav-item.active{color:var(--primary)}
+.nav-item .nav-icon{font-size:21px;transition:transform .2s}
+.nav-item.active .nav-icon{transform:translateY(-2px) scale(1.1)}
+.nav-item .nav-label{font-size:10px;font-weight:600}
+.nav-item .fab-badge{
+  position:absolute;top:-2px;right:calc(50% - 20px);
+  background:var(--accent);color:#fff;font-size:9px;font-weight:700;
+  padding:2px 6px;border-radius:8px;min-width:16px;text-align:center;
+}
+
+/* ===== ፋብ (መሃል ቁልፍ) ===== */
+.fab{
+  position:absolute;left:50%;top:-24px;transform:translateX(-50%);
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,#2ea6ff,#7c5cff);
+  display:grid;place-items:center;font-size:26px;color:#fff;
+  box-shadow:0 8px 24px rgba(46,166,255,.4);
+  transition:transform .2s;animation:pulse 2.5s ease infinite;
+}
+.fab:active{transform:translateX(-50%) scale(.9)}
+
+/* ===== ገጾች ===== */
+.page{display:none;animation:fadeUp .3s ease both}
+.page.active{display:block}
+
+/* ===== ሞዳል ===== */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;
+  display:none;align-items:flex-end;backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex}
+.modal{
+  width:100%;background:var(--card);border-radius:24px 24px 0 0;
+  padding:20px 20px calc(20px + var(--safe-bottom));
+  max-height:92vh;overflow-y:auto;animation:slideUp .3s ease;
+}
+.modal-handle{width:40px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 16px}
+.modal h3{font-size:18px;font-weight:700;margin-bottom:4px}
+.modal .sub{font-size:13px;color:var(--muted);margin-bottom:18px}
+
+/* ===== ፎርም ===== */
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;padding:13px;border:1.5px solid var(--line);border-radius:12px;
+  background:var(--bg);color:var(--text);font-size:15px;transition:border-color .2s;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  border-color:var(--primary);background:var(--card);
+}
+.form-group textarea{resize:vertical;min-height:80px}
+.btn-primary{
+  width:100%;padding:15px;background:var(--primary);color:#fff;
+  border-radius:14px;font-size:15px;font-weight:700;
+  transition:transform .15s,background .2s;margin-top:6px;
+}
+.btn-primary:active{transform:scale(.97);background:var(--primary-dark)}
+.btn-primary:disabled{opacity:.5}
+
+/* ===== ቲስት ===== */
+.toast{
+  position:fixed;bottom:calc(100px + var(--safe-bottom));left:50%;
+  transform:translateX(-50%) translateY(20px);z-index:200;
+  background:#111827;color:#fff;padding:12px 20px;border-radius:12px;
+  font-size:13px;font-weight:600;opacity:0;transition:all .3s;
+  pointer-events:none;max-width:85%;text-align:center;
+  box-shadow:0 8px 24px rgba(0,0,0,.3);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:var(--success)}
+.toast.error{background:#ef4444}
+
+/* ===== ባዶ ሁኔታ ===== */
+.empty{
+  text-align:center;padding:50px 20px;color:var(--muted);
+}
+.empty .emoji{font-size:52px;margin-bottom:12px;opacity:.6}
+.empty p{font-size:14px}
 </style>
 </head>
 <body>
-<div class="container">
 
-  <div class="header">
-    <h1>🚀 ET-Service</h1>
-    <p id="userGreeting">እንኳን ደህና መጡ</p>
+<!-- ===== ሄደር ===== -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🛍️</div>
+    <div class="logo-text">ET-Service<small>ገበያ & ሰራተኛ</small></div>
+  </div>
+  <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+  <button class="icon-btn" onclick="openModal('sellModal')">➕</button>
+</header>
+
+<!-- ===== ገጽ 1: መነሻ ===== -->
+<div class="page active" id="page-home">
+  <div class="search-wrap">
+    <div class="search-box">
+      <span>🔍</span>
+      <input type="text" id="searchInput" placeholder="ምርት ወይም ሰራተኛ ፈልግ..." oninput="filterContent()">
+    </div>
   </div>
 
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('worker')">👷 ሰራተኛ ምዝገባ</button>
-    <button class="tab" onclick="switchTab('service')">🔧 አገልግሎት ጥያቄ</button>
+  <div class="cats" id="cats">
+    <button class="cat active" data-cat="all"><span class="emoji">✨</span><span class="name">ሁሉም</span></button>
+    <button class="cat" data-cat="electronics"><span class="emoji">📱</span><span class="name">ኤሌክትሮኒክስ</span></button>
+    <button class="cat" data-cat="clothing"><span class="emoji">👕</span><span class="name">ልብስ</span></button>
+    <button class="cat" data-cat="home"><span class="emoji">🏠</span><span class="name">ቤት</span></button>
+    <button class="cat" data-cat="vehicles"><span class="emoji">🚗</span><span class="name">መኪና</span></button>
+    <button class="cat" data-cat="services"><span class="emoji">🔧</span><span class="name">አገልግሎት</span></button>
+    <button class="cat" data-cat="jobs"><span class="emoji">💼</span><span class="name">ስራ</span></button>
   </div>
 
-  <!-- Worker Registration Form -->
-  <div id="workerPanel" class="form-panel active">
+  <div class="banner">
+    <h2>🎉 እንኳን ደህና መጡ!</h2>
+    <p>ምርጥ ምርቶችን ይግዙ • ሰራተኞችን ያግኙ • ስራ ይቅጠሩ</p>
+    <button class="btn-banner" onclick="openModal('sellModal')">🚀 ይሽጡ</button>
+  </div>
+
+  <!-- ምርቶች -->
+  <div class="section-head">
+    <h3>🔥 ተወዳጅ ምርቶች</h3>
+    <a onclick="switchPage('market')">ሁሉም →</a>
+  </div>
+  <div class="grid" id="productsGrid"></div>
+
+  <!-- ሰራተኞች -->
+  <div class="section-head" style="margin-top:24px">
+    <h3>👷 ተገኝተው ያሉ ሰራተኞች</h3>
+    <a onclick="switchPage('workers')">ሁሉም →</a>
+  </div>
+  <div id="workersPreview"></div>
+</div>
+
+<!-- ===== ገጽ 2: ገበያ ===== -->
+<div class="page" id="page-market">
+  <div class="search-wrap">
+    <div class="search-box">
+      <span>🔍</span>
+      <input type="text" placeholder="ምርት ፈልግ..." oninput="filterContent(this.value)">
+    </div>
+  </div>
+  <div class="section-head"><h3>🛒 ገበያ</h3></div>
+  <div class="grid" id="allProductsGrid"></div>
+</div>
+
+<!-- ===== ገጽ 3: ሰራተኞች ===== -->
+<div class="page" id="page-workers">
+  <div class="search-wrap">
+    <div class="search-box">
+      <span>🔍</span>
+      <input type="text" placeholder="ሰራተኛ / ሙያ ፈልግ..." oninput="filterContent(this.value)">
+    </div>
+  </div>
+  <div class="section-head"><h3>👷 ሰራተኞች</h3></div>
+  <div id="allWorkersList"></div>
+</div>
+
+<!-- ===== ገጽ 4: መገለጫ ===== -->
+<div class="page" id="page-profile">
+  <div style="padding:24px 16px;text-align:center">
+    <div class="avatar" style="width:80px;height:80px;margin:0 auto 12px;font-size:32px" id="profileAvatar">👤</div>
+    <h2 style="font-size:20px;font-weight:800" id="profileName">ተጠቃሚ</h2>
+    <p style="color:var(--muted);font-size:13px;margin-top:4px" id="profileId">Telegram ID</p>
+  </div>
+  <div style="padding:0 16px">
+    <div class="worker-card" style="margin:0 0 10px" onclick="switchPage('market')">
+      <div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">🛒</div>
+      <div class="worker-info"><h4>የእኔ ምርቶች</h4><div class="loc">የሸጥካቸው ምርቶች</div></div>
+      <div class="worker-actions"><span style="font-size:18px">›</span></div>
+    </div>
+    <div class="worker-card" style="margin:0 0 10px" onclick="switchPage('workers')">
+      <div class="avatar" style="background:linear-gradient(135deg,#10b981,#059669)">👷</div>
+      <div class="worker-info"><h4>የእኔ ስራዎች</h4><div class="loc">የጠየቅካቸው አገልግሎቶች</div></div>
+      <div class="worker-actions"><span style="font-size:18px">›</span></div>
+    </div>
+    <div class="worker-card" style="margin:0 0 10px">
+      <div class="avatar" style="background:linear-gradient(135deg,#8b5cf6,#6366f1)">⚙️</div>
+      <div class="worker-info"><h4>ቅንብሮች</h4><div class="loc">ማስተካከያ</div></div>
+      <div class="worker-actions"><span style="font-size:18px">›</span></div>
+    </div>
+    <div class="worker-card" style="margin:0 0 10px">
+      <div class="avatar" style="background:linear-gradient(135deg,#ef4444,#dc2626)">❓</div>
+      <div class="worker-info"><h4>እርዳታ</h4><div class="loc">ጥያቄዎችን ይጠይቁ</div></div>
+      <div class="worker-actions"><span style="font-size:18px">›</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ታች ናቪጌሽን ===== -->
+<nav class="bottom-nav">
+  <button class="nav-item active" data-page="home" onclick="switchPage('home')">
+    <span class="nav-icon">🏠</span><span class="nav-label">መነሻ</span>
+  </button>
+  <button class="nav-item" data-page="market" onclick="switchPage('market')">
+    <span class="nav-icon">🛒</span><span class="nav-label">ገበያ</span>
+  </button>
+  <div style="flex:1;position:relative">
+    <button class="fab" onclick="openModal('sellModal')">➕</button>
+  </div>
+  <button class="nav-item" data-page="workers" onclick="switchPage('workers')">
+    <span class="nav-icon">👷</span><span class="nav-label">ሰራተኛ</span>
+  </button>
+  <button class="nav-item" data-page="profile" onclick="switchPage('profile')">
+    <span class="nav-icon">👤</span><span class="nav-label">እኔ</span>
+  </button>
+</nav>
+
+<!-- ===== ሞዳል: ምርት ሽያጭ ===== -->
+<div class="modal-overlay" id="sellModal" onclick="if(event.target===this)closeModal('sellModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>🚀 ምርትህን ሽጥ</h3>
+    <p class="sub">ምርትህን ለሺህ ደንበኞች አቅርብ</p>
+    <form id="sellForm">
+      <div class="form-group"><label>የምርት ስም *</label><input name="title" required placeholder="ለምሳሌ፦ iPhone 13"></div>
+      <div class="form-group"><label>ዋጋ (ብር) *</label><input name="price" type="number" required placeholder="25000"></div>
+      <div class="form-group"><label>ምድብ *</label>
+        <select name="category" required>
+          <option value="">-- ምረጥ --</option>
+          <option value="electronics">📱 ኤሌክትሮኒክስ</option>
+          <option value="clothing">👕 ልብስ</option>
+          <option value="home">🏠 ቤት</option>
+          <option value="vehicles">🚗 መኪና</option>
+          <option value="services">🔧 አገልግሎት</option>
+          <option value="jobs">💼 ስራ</option>
+        </select>
+      </div>
+      <div class="form-group"><label>ስልክ ቁጥር *</label><input name="phone" type="tel" required placeholder="0912345678" pattern="[0-9]{10}"></div>
+      <div class="form-group"><label>አድራሻ *</label><input name="location" required placeholder="አዲስ አበባ, ቦሌ"></div>
+      <div class="form-group"><label>መግለጫ</label><textarea name="description" placeholder="ተጨማሪ መረጃ..."></textarea></div>
+      <button type="submit" class="btn-primary" id="sellBtn">📤 ምርት ላክ</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== ሞዳል: ሰራተኛ ምዝገባ ===== -->
+<div class="modal-overlay" id="workerModal" onclick="if(event.target===this)closeModal('workerModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>👷 እንደ ሰራተኛ ተመዝገብ</h3>
+    <p class="sub">ስራ እንዲያገኙ ያግዝዎታል</p>
     <form id="workerForm">
-      <div class="form-group">
-        <label>ሙሉ ስም *</label>
-        <input type="text" name="name" required placeholder="ለምሳሌ፦ አበበ ከበደ">
-      </div>
-      <div class="form-group">
-        <label>ስልክ ቁጥር *</label>
-        <input type="tel" name="phone" required placeholder="0912345678" pattern="[0-9]{10}">
-      </div>
-      <div class="form-group">
-        <label>ሙያ *</label>
+      <div class="form-group"><label>ሙሉ ስም *</label><input name="name" required placeholder="አበበ ከበደ"></div>
+      <div class="form-group"><label>ስልክ *</label><input name="phone" type="tel" required placeholder="0912345678" pattern="[0-9]{10}"></div>
+      <div class="form-group"><label>ሙያ *</label>
         <select name="skill" required>
           <option value="">-- ምረጥ --</option>
           <option value="electrician">⚡ ኤሌክትሪሺያን</option>
@@ -161,172 +436,45 @@
           <option value="painter">🎨 ቀለም ቀቢያ</option>
           <option value="mason">🧱 ግንበኛ</option>
           <option value="cleaner">🧹 ጽጌረዳ</option>
-          <option value="other">📌 ሌላ</option>
         </select>
       </div>
-      <div class="form-group">
-        <label>አጭር መግለጫ</label>
-        <textarea name="bio" placeholder="ስለ ራስህ አጭር መግለጫ..."></textarea>
-      </div>
-      <button type="submit" class="btn" id="workerBtn">📝 ተመዝገብ</button>
+      <div class="form-group"><label>አድራሻ *</label><input name="location" required placeholder="አዲስ አበባ"></div>
+      <button type="submit" class="btn-primary" id="workerBtn">📝 ተመዝገብ</button>
     </form>
-    <div id="workerStatus" class="status"></div>
   </div>
-
-  <!-- Service Request Form -->
-  <div id="servicePanel" class="form-panel">
-    <form id="serviceForm">
-      <div class="form-group">
-        <label>ምን አገልግሎት ይፈልጋሉ? *</label>
-        <select name="service" required>
-          <option value="">-- ምረጥ --</option>
-          <option value="electrician">⚡ ኤሌክትሪሺያን</option>
-          <option value="plumber">🚰 ቧንቧ ሰራተኛ</option>
-          <option value="carpenter">🪚 አናጢ</option>
-          <option value="painter">🎨 ቀለም ቀቢያ</option>
-          <option value="mason">🧱 ግንበኛ</option>
-          <option value="cleaner">🧹 ጽጌረዳ</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>ስልክ ቁጥር *</label>
-        <input type="tel" name="phone" required placeholder="0912345678" pattern="[0-9]{10}">
-      </div>
-      <div class="form-group">
-        <label>አድራሻ *</label>
-        <input type="text" name="address" required placeholder="ክፍለ ከተማ / ቦታ">
-      </div>
-      <div class="form-group">
-        <label>ተጨማሪ መረጃ</label>
-        <textarea name="description" placeholder="ችግሩን በዝርዝር ግለጽ..."></textarea>
-      </div>
-      <button type="submit" class="btn" id="serviceBtn">🚀 ጥያቄ ላክ</button>
-    </form>
-    <div id="serviceStatus" class="status"></div>
-  </div>
-
-  <div class="footer">
-    <p>ET-Service © 2026</p>
-    <p id="tgInfo"></p>
-  </div>
-
 </div>
 
+<!-- ===== ቲስት ===== -->
+<div class="toast" id="toast"></div>
+
 <script>
-  // ===== Telegram WebApp =====
-  const tg = window.Telegram?.WebApp;
-  if (tg) {
-    tg.ready();
-    tg.expand();
-    tg.setHeaderColor('#2ea6ff');
-
-    const user = tg.initDataUnsafe?.user;
-    if (user) {
-      document.getElementById('userGreeting').textContent =
-        `እንኳን ደህና መጡ, ${user.first_name}! 👋`;
-      document.getElementById('tgInfo').textContent = `ID: ${user.id}`;
-    }
+/* ===== Telegram ===== */
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready(); tg.expand();
+  const u = tg.initDataUnsafe?.user;
+  if (u) {
+    document.getElementById('profileName').textContent = u.first_name + (u.last_name ? ' ' + u.last_name : '');
+    document.getElementById('profileId').textContent = 'ID: ' + u.id;
+    document.getElementById('profileAvatar').textContent = u.first_name?.charAt(0)?.toUpperCase() || '👤';
   }
+}
 
-  // ===== API Base URL =====
-  // ⚠️ ይህን በ Railway app URL ተካ
-  const API_BASE = "https://your-railway-app.up.railway.app";
+/* ===== API ===== */
+const API_BASE = "https://your-railway-app.up.railway.app";
+// ⚠️ ይህን በ Railway URL ተካ
 
-  // ===== Tab Switch =====
-  function switchTab(type) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+/* ===== ዳታ (ለሙከራ) ===== */
+const PRODUCTS = [
+  {id:1, title:'iPhone 13 Pro', price:45000, cat:'electronics', emoji:'📱', loc:'አዲስ አበባ', rating:4.8, badge:'አዲስ'},
+  {id:2, title:'Samsung TV 55"', price:32000, cat:'electronics', emoji:'📺', loc:'ቦሌ', rating:4.5},
+  {id:3, title:'Nike ጫማ', price:4500, cat:'clothing', emoji:'👟', loc:'መርካቶ', rating:4.7},
+  {id:4, title:'የቤት ሶፋ', price:18000, cat:'home', emoji:'🛋️', loc:'ሲኤምሲ', rating:4.3},
+  {id:5, title:'Toyota Corolla', price:850000, cat:'vehicles', emoji:'🚗', loc:'አዲስ አበባ', rating:4.9, badge:'ልዩ'},
+  {id:6, title:'ላፕቶፕ HP', price:28000, cat:'electronics', emoji:'💻', loc:'ፒያሳ', rating:4.6},
+  {id:7, title:'ጀኪት ብራንድ አዲስ', price:2200, cat:'clothing', emoji:'🧥', loc:'ሱመር', rating:4.4},
+  {id:8, title:'ማዕድ ጠረጴዛ', price:6500, cat:'home', emoji:'🪑', loc:'ቦሌ', rating:4.2},
+];
 
-    if (type === 'worker') {
-      document.querySelectorAll('.tab')[0].classList.add('active');
-      document.getElementById('workerPanel').classList.add('active');
-    } else {
-      document.querySelectorAll('.tab')[1].classList.add('active');
-      document.getElementById('servicePanel').classList.add('active');
-    }
-    tg?.HapticFeedback?.selectionChanged();
-  }
-
-  // ===== Status Helper =====
-  function showStatus(el, message, type) {
-    el.textContent = message;
-    el.className = 'status ' + type;
-    setTimeout(() => {
-      if (type !== 'loading') el.className = 'status';
-    }, 5000);
-  }
-
-  // ===== Worker Form Submit =====
-  document.getElementById('workerForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('workerBtn');
-    const status = document.getElementById('workerStatus');
-    const formData = Object.fromEntries(new FormData(e.target));
-
-    btn.disabled = true;
-    showStatus(status, '⏳ በመላክ ላይ...', 'loading');
-    tg?.HapticFeedback?.impactOccurred('light');
-
-    try {
-      const res = await fetch(`${API_BASE}/api/register-worker`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          telegram_id: tg?.initDataUnsafe?.user?.id
-        })
-      });
-      const data = await res.json();
-      showStatus(status, '✅ ' + data.message, 'success');
-      e.target.reset();
-      tg?.HapticFeedback?.notificationOccurred('success');
-      tg?.MainButton?.hide?.();
-    } catch (err) {
-      showStatus(status, '❌ ስህተት: ' + err.message, 'error');
-      tg?.HapticFeedback?.notificationOccurred('error');
-    } finally {
-      btn.disabled = false;
-    }
-  });
-
-  // ===== Service Form Submit =====
-  document.getElementById('serviceForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('serviceBtn');
-    const status = document.getElementById('serviceStatus');
-    const formData = Object.fromEntries(new FormData(e.target));
-
-    btn.disabled = true;
-    showStatus(status, '⏳ በመላክ ላይ...', 'loading');
-    tg?.HapticFeedback?.impactOccurred('light');
-
-    try {
-      const res = await fetch(`${API_BASE}/api/request-service`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          telegram_id: tg?.initDataUnsafe?.user?.id
-        })
-      });
-      const data = await res.json();
-      showStatus(status, '✅ ' + data.message, 'success');
-      e.target.reset();
-      tg?.HapticFeedback?.notificationOccurred('success');
-    } catch (err) {
-      showStatus(status, '❌ ስህተት: ' + err.message, 'error');
-      tg?.HapticFeedback?.notificationOccurred('error');
-    } finally {
-      btn.disabled = false;
-    }
-  });
-
-  // Theme change listener
-  if (tg) {
-    tg.onEvent('themeChanged', () => {
-      document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color);
-    });
-  }
-</script>
-</body>
-</html>
+const WORKERS = [
+  {id:1, name:'አበበ ከበደ', skill:'⚡ ኤሌክትሪሺ
