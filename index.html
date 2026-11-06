@@ -1,237 +1,332 @@
 <!DOCTYPE html>
 <html lang="am">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ET-Service Pro</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root {
-            --bg-color: #0d1117;
-            --surface-color: #161b22;
-            --surface-card: #21262d;
-            --text-primary: #c9d1d9;
-            --text-secondary: #8b949e;
-            --accent-color: #58a6ff;
-            --accent-gradient: linear-gradient(135deg, #1f6feb, #58a6ff);
-            --success-color: #238636;
-            --border-color: #30363d;
-            --gold-color: #d4af37;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ET-Service</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--tg-theme-bg-color, #ffffff);
+    color: var(--tg-theme-text-color, #000000);
+    padding: 16px;
+    min-height: 100vh;
+    transition: background 0.3s;
+  }
+  .container { max-width: 500px; margin: 0 auto; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
-            padding-bottom: 90px;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            user-select: none;
-        }
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+    margin-bottom: 20px;
+  }
+  .header h1 { font-size: 24px; margin-bottom: 6px; }
+  .header p { color: var(--tg-theme-hint-color, #888); font-size: 14px; }
 
-        /* Header & Mode Switcher */
-        header {
-            background: var(--surface-color);
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+    padding: 4px;
+    border-radius: 12px;
+  }
+  .tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--tg-theme-hint-color, #888);
+    transition: all 0.2s;
+    border: none;
+    background: transparent;
+  }
+  .tab.active {
+    background: var(--tg-theme-button-color, #2ea6ff);
+    color: var(--tg-theme-button-text-color, #ffffff);
+  }
 
-        .logo {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+  /* Forms */
+  .form-panel { display: none; }
+  .form-panel.active { display: block; animation: fadeIn 0.3s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .mode-switch {
-            background: var(--surface-card);
-            padding: 4px;
-            border-radius: 20px;
-            display: flex;
-            border: 1px solid var(--border-color);
-        }
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid var(--tg-theme-hint-color, #ddd);
+    border-radius: 10px;
+    background: var(--tg-theme-secondary-bg-color, #f9f9f9);
+    color: var(--tg-theme-text-color, #000);
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--tg-theme-button-color, #2ea6ff);
+  }
+  .form-group textarea { resize: vertical; min-height: 80px; }
 
-        .mode-btn {
-            padding: 6px 14px;
-            border-radius: 16px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            color: var(--text-secondary);
-            border: none;
-            background: transparent;
-        }
+  /* Button */
+  .btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--tg-theme-button-color, #2ea6ff);
+    color: var(--tg-theme-button-text-color, #fff);
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.2s;
+  }
+  .btn:active { opacity: 0.7; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .mode-btn.active {
-            background: var(--accent-gradient);
-            color: white;
-        }
+  /* Status message */
+  .status {
+    padding: 14px;
+    border-radius: 10px;
+    margin-top: 16px;
+    font-size: 14px;
+    text-align: center;
+    display: none;
+  }
+  .status.success { background: #d4edda; color: #155724; display: block; }
+  .status.error { background: #f8d7da; color: #721c24; display: block; }
+  .status.loading { background: #d1ecf1; color: #0c5460; display: block; }
 
-        /* Search & Categories */
-        .control-panel {
-            padding: 16px;
-            background: var(--surface-color);
-        }
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 20px 0;
+    color: var(--tg-theme-hint-color, #888);
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
 
-        .search-wrapper {
-            position: relative;
-            margin-bottom: 12px;
-        }
+  <div class="header">
+    <h1>🚀 ET-Service</h1>
+    <p id="userGreeting">እንኳን ደህና መጡ</p>
+  </div>
 
-        .search-input {
-            width: 100%;
-            padding: 12px 16px;
-            padding-left: 40px;
-            background: var(--surface-card);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            color: var(--text-primary);
-            font-size: 14px;
-            box-sizing: border-box;
-        }
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('worker')">👷 ሰራተኛ ምዝገባ</button>
+    <button class="tab" onclick="switchTab('service')">🔧 አገልግሎት ጥያቄ</button>
+  </div>
 
-        .search-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-        }
+  <!-- Worker Registration Form -->
+  <div id="workerPanel" class="form-panel active">
+    <form id="workerForm">
+      <div class="form-group">
+        <label>ሙሉ ስም *</label>
+        <input type="text" name="name" required placeholder="ለምሳሌ፦ አበበ ከበደ">
+      </div>
+      <div class="form-group">
+        <label>ስልክ ቁጥር *</label>
+        <input type="tel" name="phone" required placeholder="0912345678" pattern="[0-9]{10}">
+      </div>
+      <div class="form-group">
+        <label>ሙያ *</label>
+        <select name="skill" required>
+          <option value="">-- ምረጥ --</option>
+          <option value="electrician">⚡ ኤሌክትሪሺያን</option>
+          <option value="plumber">🚰 ቧንቧ ሰራተኛ</option>
+          <option value="carpenter">🪚 አናጢ</option>
+          <option value="painter">🎨 ቀለም ቀቢያ</option>
+          <option value="mason">🧱 ግንበኛ</option>
+          <option value="cleaner">🧹 ጽጌረዳ</option>
+          <option value="other">📌 ሌላ</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>አጭር መግለጫ</label>
+        <textarea name="bio" placeholder="ስለ ራስህ አጭር መግለጫ..."></textarea>
+      </div>
+      <button type="submit" class="btn" id="workerBtn">📝 ተመዝገብ</button>
+    </form>
+    <div id="workerStatus" class="status"></div>
+  </div>
 
-        .category-scroll {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            scrollbar-width: none;
-            padding-bottom: 4px;
-        }
-        .category-scroll::-webkit-scrollbar { display: none; }
+  <!-- Service Request Form -->
+  <div id="servicePanel" class="form-panel">
+    <form id="serviceForm">
+      <div class="form-group">
+        <label>ምን አገልግሎት ይፈልጋሉ? *</label>
+        <select name="service" required>
+          <option value="">-- ምረጥ --</option>
+          <option value="electrician">⚡ ኤሌክትሪሺያን</option>
+          <option value="plumber">🚰 ቧንቧ ሰራተኛ</option>
+          <option value="carpenter">🪚 አናጢ</option>
+          <option value="painter">🎨 ቀለም ቀቢያ</option>
+          <option value="mason">🧱 ግንበኛ</option>
+          <option value="cleaner">🧹 ጽጌረዳ</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>ስልክ ቁጥር *</label>
+        <input type="tel" name="phone" required placeholder="0912345678" pattern="[0-9]{10}">
+      </div>
+      <div class="form-group">
+        <label>አድራሻ *</label>
+        <input type="text" name="address" required placeholder="ክፍለ ከተማ / ቦታ">
+      </div>
+      <div class="form-group">
+        <label>ተጨማሪ መረጃ</label>
+        <textarea name="description" placeholder="ችግሩን በዝርዝር ግለጽ..."></textarea>
+      </div>
+      <button type="submit" class="btn" id="serviceBtn">🚀 ጥያቄ ላክ</button>
+    </form>
+    <div id="serviceStatus" class="status"></div>
+  </div>
 
-        .cat-chip {
-            padding: 8px 16px;
-            background: var(--surface-card);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            white-space: nowrap;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+  <div class="footer">
+    <p>ET-Service © 2026</p>
+    <p id="tgInfo"></p>
+  </div>
 
-        .cat-chip.active {
-            background: var(--accent-color);
-            color: var(--bg-color);
-            border-color: var(--accent-color);
-            font-weight: 600;
-        }
+</div>
 
-        /* Views */
-        .content-view { display: none; padding: 16px; }
-        .content-view.active { display: block; }
+<script>
+  // ===== Telegram WebApp =====
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    tg.setHeaderColor('#2ea6ff');
 
-        /* Grid Cards */
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
+    const user = tg.initDataUnsafe?.user;
+    if (user) {
+      document.getElementById('userGreeting').textContent =
+        `እንኳን ደህና መጡ, ${user.first_name}! 👋`;
+      document.getElementById('tgInfo').textContent = `ID: ${user.id}`;
+    }
+  }
 
-        .service-card {
-            background: var(--surface-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.2s, border-color 0.2s;
-        }
+  // ===== API Base URL =====
+  // ⚠️ ይህን በ Railway app URL ተካ
+  const API_BASE = "https://your-railway-app.up.railway.app";
 
-        .service-card:active {
-            transform: scale(0.96);
-            border-color: var(--accent-color);
-        }
+  // ===== Tab Switch =====
+  function switchTab(type) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
 
-        .card-icon {
-            font-size: 36px;
-            margin-bottom: 8px;
-            background: var(--bg-color);
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--border-color);
-        }
+    if (type === 'worker') {
+      document.querySelectorAll('.tab')[0].classList.add('active');
+      document.getElementById('workerPanel').classList.add('active');
+    } else {
+      document.querySelectorAll('.tab')[1].classList.add('active');
+      document.getElementById('servicePanel').classList.add('active');
+    }
+    tg?.HapticFeedback?.selectionChanged();
+  }
 
-        .card-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            color: var(--text-primary);
-        }
+  // ===== Status Helper =====
+  function showStatus(el, message, type) {
+    el.textContent = message;
+    el.className = 'status ' + type;
+    setTimeout(() => {
+      if (type !== 'loading') el.className = 'status';
+    }, 5000);
+  }
 
-        .card-desc {
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
+  // ===== Worker Form Submit =====
+  document.getElementById('workerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('workerBtn');
+    const status = document.getElementById('workerStatus');
+    const formData = Object.fromEntries(new FormData(e.target));
 
-        /* Forms */
-        .form-card {
-            background: var(--surface-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-        }
+    btn.disabled = true;
+    showStatus(status, '⏳ በመላክ ላይ...', 'loading');
+    tg?.HapticFeedback?.impactOccurred('light');
 
-        .form-group { margin-bottom: 16px; }
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
+    try {
+      const res = await fetch(`${API_BASE}/api/register-worker`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          telegram_id: tg?.initDataUnsafe?.user?.id
+        })
+      });
+      const data = await res.json();
+      showStatus(status, '✅ ' + data.message, 'success');
+      e.target.reset();
+      tg?.HapticFeedback?.notificationOccurred('success');
+      tg?.MainButton?.hide?.();
+    } catch (err) {
+      showStatus(status, '❌ ስህተት: ' + err.message, 'error');
+      tg?.HapticFeedback?.notificationOccurred('error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
 
-        .form-input, .form-select {
-            width: 100%;
-            padding: 12px;
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 14px;
-            box-sizing: border-box;
-        }
+  // ===== Service Form Submit =====
+  document.getElementById('serviceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('serviceBtn');
+    const status = document.getElementById('serviceStatus');
+    const formData = Object.fromEntries(new FormData(e.target));
 
-        .btn-submit {
-            width: 100%;
-            padding: 14px;
-            background: var(--success-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 8px;
-        }
+    btn.disabled = true;
+    showStatus(status, '⏳ በመላክ ላይ...', 'loading');
+    tg?.HapticFeedback?.impactOccurred('light');
 
-        /* Pro Mode Styling */
-        .pro-banner {
-            background: linear-gradient(135deg, var(--gold-color), #996515);
-            padding: 20px;
-            border-radius: 12px;
+    try {
+      const res = await fetch(`${API_BASE}/api/request-service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          telegram_id: tg?.initDataUnsafe?.user?.id
+        })
+      });
+      const data = await res.json();
+      showStatus(status, '✅ ' + data.message, 'success');
+      e.target.reset();
+      tg?.HapticFeedback?.notificationOccurred('success');
+    } catch (err) {
+      showStatus(status, '❌ ስህተት: ' + err.message, 'error');
+      tg?.HapticFeedback?.notificationOccurred('error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Theme change listener
+  if (tg) {
+    tg.onEvent('themeChanged', () => {
+      document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color);
+    });
+  }
+</script>
+</body>
+</html>
