@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ET-Service Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); }
+        .btn { width: 100%; padding: 12px; margin: 10px 0; background: #0088cc; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        input, select { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <h2>ET-Service አገልጋይና ደንበኛ ማገናኛ</h2>
+    
+    <div id="role-selection">
+        <button class="btn" onclick="showForm('client')">አገልግሎት እፈልጋለሁ (ደንበኛ)</button>
+        <button class="btn" onclick="showForm('worker')">ለመስራት እመዘገባለሁ (ሰራተኛ)</button>
+    </div>
+
+    <form id="worker-form" style="display:none;" onsubmit="submitWorker(event)">
+        <h3>የሰራተኛ ምዝገባ</h3>
+        <input type="text" id="phone" placeholder="ስልክ ቁጥር" required>
+        <select id="skill" required>
+            <option value="">የሙያ ዘርፍ ይምረጡ</option>
+            <option value="technician">ኤሌክትሮኒክስ ጥገና</option>
+            <option value="plumber">የቧንቧ ስራ</option>
+            <option value="cleaner">ጽዳት</option>
+        </select>
+        <button type="submit" class="btn">መዝግበኝ</button>
+    </form>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        function showForm(role) {
+            if(role === 'worker') {
+                document.getElementById('role-selection').style.display = 'none';
+                document.getElementById('worker-form').style.display = 'block';
+            }
+        }
+
+        async function submitWorker(e) {
+            e.preventDefault();
+            const userData = {
+                tg_id: tg.initDataUnsafe.user?.id,
+                name: tg.initDataUnsafe.user?.first_name,
+                phone: document.getElementById('phone').value,
+                skill: document.getElementById('skill').value
+            };
+
+            const response = await fetch('/api/register-worker', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(userData)
+            });
+
+            if (response.ok) {
+                tg.showAlert("ምዝገባዎ ተሳክቷል!");
+                tg.close();
+            }
+        }
+    </script>
+</body>
+</html>
