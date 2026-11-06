@@ -10,9 +10,9 @@ import asyncio
 BOT_TOKEN = "8627625987:AAHAG-4_nr7yDkbKIhR5F_6hZgKxOlGlS_w"
 WEBAPP_URL = "https://et-service-bot.onrender.com"
 
-
 app = FastAPI()
 dp = Dispatcher()
+bot = Bot(token=BOT_TOKEN)
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_index():
