@@ -3,134 +3,419 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ET-Service Mini App</title>
+    <title>ET-Service Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: var(--tg-theme-bg-color, #0f172a);
-            --text-color: var(--tg-theme-text-color, #f8fafc);
-            --card-bg: var(--tg-theme-secondary-bg-color, #1e293b);
-            --primary-color: #38bdf8;
+            --bg-color: #0b0f19;
+            --surface-color: #151b2d;
+            --surface-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-color: #38bdf8;
+            --accent-gradient: linear-gradient(135deg, #0ea5e9, #3b82f6);
+            --danger-color: #ef4444;
+            --success-color: #22c55e;
         }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            padding-bottom: 80px;
             background-color: var(--bg-color);
-            color: var(--text-color);
+            color: var(--text-primary);
+        }
+
+        /* Top Header Area */
+        header {
+            background: var(--surface-color);
+            padding: 16px;
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-            min-height: 100vh;
+            border-bottom: 1px solid #2d3748;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        .container {
+
+        .logo {
+            font-size: 20px;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wallet-badge {
+            background: var(--surface-card);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-color);
+            border: 1px solid #334155;
+        }
+
+        /* Search & Filter Section */
+        .search-container {
+            padding: 16px;
+            background: var(--surface-color);
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
             width: 100%;
-            max-width: 400px;
-            background: var(--card-bg);
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            padding: 12px 16px;
+            padding-left: 40px;
+            background: var(--surface-card);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
             box-sizing: border-box;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        /* Category Tabs */
+        .categories {
+            display: flex;
+            gap: 10px;
+            padding: 12px 16px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .categories::-webkit-scrollbar { display: none; }
+
+        .cat-tab {
+            background: var(--surface-card);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .cat-tab.active {
+            background: var(--accent-gradient);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        /* Main Content Area */
+        main {
+            padding: 16px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .card {
+            background: var(--surface-card);
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid #334155;
+            transition: transform 0.2s;
+        }
+
+        .card:active {
+            transform: scale(0.95);
+        }
+
+        .card-img {
+            height: 100px;
+            background: linear-gradient(180deg, #334155, #1e293b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .card-body {
+            padding: 10px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .card-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Action Buttons */
+        .action-container {
             margin-top: 20px;
-            animation: fadeIn 0.4s ease-in-out;
+            background: var(--surface-card);
+            padding: 16px;
+            border-radius: 14px;
+            border: 1px solid #334155;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        h2, h3 {
-            text-align: center;
-            color: var(--primary-color);
-        }
-        .btn {
+
+        .btn-primary {
             width: 100%;
             padding: 14px;
-            margin: 12px 0;
-            background: linear-gradient(135deg, #0284c7, #0369a1);
+            background: var(--accent-gradient);
             color: white;
             border: none;
             border-radius: 10px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
         }
-        .btn:active {
-            transform: scale(0.98);
+
+        /* Form Styling */
+        .form-group {
+            margin-bottom: 15px;
         }
-        input, select {
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
             width: 100%;
             padding: 12px;
-            margin: 10px 0;
-            box-sizing: border-box;
-            border-radius: 8px;
-            border: 1px solid #475569;
             background: var(--bg-color);
-            color: var(--text-color);
-            font-size: 14px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: var(--text-primary);
+            box-sizing: border-box;
         }
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+
+        /* Bottom Navigation Bar */
+        nav.bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            border-top: 1px solid #2d3748;
+            z-index: 100;
         }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 11px;
+            gap: 4px;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>🚀 ET-Service ማዕከል</h2>
 
-        <div id="role-selection">
-            <button class="btn" onclick="showForm('client')">👤 አገልግሎት እፈልጋለሁ (ደንበኛ)</button>
-            <button class="btn" onclick="showForm('worker')">🛠️ ለሰራተኛ እመዝገብላለሁ (ሰራተኛ)</button>
+    <header>
+        <div class="logo">
+            <span>🚀</span> ET-Service
+        </div>
+        <div class="wallet-badge">
+            ⭐ Pro Mode
+        </div>
+    </header>
+
+    <div class="search-container">
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="አገልግሎት ወይም ባለሙያ ይፈልጉ...">
+        </div>
+    </div>
+
+    <div class="categories">
+        <div class="cat-tab active" onclick="filterCat(this)">ሁሉም</div>
+        <div class="cat-tab" onclick="filterCat(this)">ቴክኒሻን</div>
+        <div class="cat-tab" onclick="filterCat(this)">ፕለምበር</div>
+        <div class="cat-tab" onclick="filterCat(this)">ጽዳት</div>
+        <div class="cat-tab" onclick="filterCat(this)">ኤሌክትሪክ</div>
+    </div>
+
+    <main id="main-content">
+        <!-- Home View -->
+        <div id="view-home">
+            <div class="section-title">
+                <span>ምርጥ ባለሙያዎች</span>
+            </div>
+            <div class="grid-cards">
+                <div class="card" onclick="showRegister()">
+                    <div class="card-img">🔧</div>
+                    <div class="card-body">
+                        <div class="card-title">ጥገና ሰራተኛ</div>
+                        <div class="card-subtitle">አስተማማኝ ባለሙያ</div>
+                    </div>
+                </div>
+                <div class="card" onclick="showRegister()">
+                    <div class="card-img">🚿</div>
+                    <div class="card-body">
+                        <div class="card-title">የቧንቧ ባለሙያ</div>
+                        <div class="card-subtitle">አፋጣኝ አገልግሎት</div>
+                    </div>
+                </div>
+                <div class="card" onclick="showRegister()">
+                    <div class="card-img">🧹</div>
+                    <div class="card-body">
+                        <div class="card-title">የቤት ጽዳት</div>
+                        <div class="card-subtitle">የጠራ እና የተደራጀ</div>
+                    </div>
+                </div>
+                <div class="card" onclick="showRegister()">
+                    <div class="card-img">⚡</div>
+                    <div class="card-body">
+                        <div class="card-title">ኤሌክትሪሻን</div>
+                        <div class="card-subtitle">ደህንነቱ የተጠበቀ</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-container">
+                <h3 style="margin-top:0;">ፈጣን ምዝገባ</h3>
+                <p style="color:var(--text-secondary); font-size:13px;">በሙያዎ ተመዝግበው ገቢ መፍጠር ይጀምሩ።</p>
+                <button class="btn-primary" onclick="showRegister()">አሁን ይመዝገቡ</button>
+            </div>
         </div>
 
-        <form id="worker-form" style="display: none;" onsubmit="submitworker(event)">
-            <h3>📋 ሰራተኛ ምዝገባ ፎርም</h3>
-            <input type="text" id="phone" placeholder="ስልክ ቁጥር (ምሳሌ፡ 09...)" required>
-            <select id="skill" required>
-                <option value="">ሙያ ይምረጡ</option>
-                <option value="technician">ቴክኒሻን</option>
-                <option value="plumber">ፕለምበር</option>
-                <option value="cleaner">ጽዳት</option>
-            </select>
-            <button type="submit" class="btn">ምዝገባ ጨርስ ✨</button>
-        </form>
-    </div>
+        <!-- Register View -->
+        <div id="view-register" class="hidden">
+            <div class="section-title">
+                <span onclick="showHome()" style="cursor:pointer; font-size:16px;">⬅️ ተመለስ</span>
+                <span>የባለሙያ መመዝገቢያ</span>
+            </div>
+            <form id="worker-form" onsubmit="submitWorker(event)" style="background: var(--surface-card); padding: 16px; border-radius: 14px;">
+                <div class="form-group">
+                    <label>ስልክ ቁጥር</label>
+                    <input type="tel" id="phone" class="form-control" placeholder="0911223344" required>
+                </div>
+                <div class="form-group">
+                    <label>የሙያ ዘርፍ</label>
+                    <select id="skill" class="form-control" required>
+                        <option value="technician">ቴክኒሻን</option>
+                        <option value="plumber">ፕለምበር</option>
+                        <option value="cleaner">ጽዳት</option>
+                        <option value="electrician">ኤሌክትሪሻን</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top:10px;">ምዝገባን ያጠናቅቁ</button>
+            </form>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active" onclick="switchNav(this)">
+            <span class="nav-icon">🏠</span>
+            <span>முகቤት</span>
+        </a>
+        <a href="#" class="nav-item" onclick="switchNav(this)">
+            <span class="nav-icon">💼</span>
+            <span>ስራዎች</span>
+        </a>
+        <a href="#" class="nav-item" onclick="switchNav(this)">
+            <span class="nav-icon">🔔</span>
+            <span>ማሳሰቢያ</span>
+        </a>
+        <a href="#" class="nav-item" onclick="switchNav(this)">
+            <span class="nav-icon">👤</span>
+            <span>ፕሮፋይል</span>
+        </a>
+    </nav>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        function showForm(role) {
-            document.getElementById('role-selection').style.display = 'none';
-            if (role === 'worker') {
-                document.getElementById('worker-form').style.display = 'block';
-            } else if (role === 'client') {
-                tg.showAlert('የደንበኛ አገልግሎት በቅርቡ ይጀመራል!');
-            }
+        function showRegister() {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-register').classList.remove('hidden');
         }
 
-        async function submitworker(e) {
+        function showHome() {
+            document.getElementById('view-register').classList.add('hidden');
+            document.getElementById('view-home').classList.remove('hidden');
+        }
+
+        function filterCat(element) {
+            document.querySelectorAll('.cat-tab').forEach(tab => tab.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        function switchNav(element) {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        async function submitWorker(e) {
             e.preventDefault();
             const userData = {
-                tg_id: tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 123456,
+                tg_id: tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 999999,
                 name: tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "User",
                 phone: document.getElementById('phone').value,
                 skill: document.getElementById('skill').value
             };
 
-            const response = await fetch('/api/register-worker', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(userData)
-            });
+            try {
+                const response = await fetch('/api/register-worker', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
 
-            if (response.ok) {
-                tg.showAlert("ምዝገባው በተሳካ ሁኔታ ተጠናቋል! 🎉");
-            } else {
-                tg.showAlert("ምዝገባው አልተሳካም, እንደገና ይሞክሩ።");
+                if (response.ok) {
+                    tg.showAlert("የተመዘገቡት በስኬት ነው! እንኳን በደህና መጡ። 🎉");
+                    showHome();
+                } else {
+                    tg.showAlert("ምዝገባው አልተሳካም። እባክዎ እንደገና ይሞክሩ።");
+                }
+            } catch (error) {
+                tg.showAlert("የሰርቨር ችግር አጋጥሟል።");
             }
         }
     </script>
