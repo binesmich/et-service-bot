@@ -6,30 +6,98 @@
     <title>ET-Service Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); }
-        .btn { width: 100%; padding: 12px; margin: 10px 0; background: #0088cc; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-        input, select { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #0f172a);
+            --text-color: var(--tg-theme-text-color, #f8fafc);
+            --card-bg: var(--tg-theme-secondary-bg-color, #1e293b);
+            --primary-color: #38bdf8;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+            margin-top: 20px;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h2, h3 {
+            text-align: center;
+            color: var(--primary-color);
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            margin: 12px 0;
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 14px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
     </style>
 </head>
 <body>
-    <h2>ET-Service አገልግሎት ማግኘት</h2>
+    <div class="container">
+        <h2>🚀 ET-Service ማዕከል</h2>
 
-    <div id="role-selection">
-        <button class="btn" onclick="showForm('client')">አገልግሎት እፈልጋለሁ (ደንበኛ)</button>
-        <button class="btn" onclick="showForm('worker')">ለሰራተኛ እመዝገብላለሁ (ሰራተኛ)</button>
+        <div id="role-selection">
+            <button class="btn" onclick="showForm('client')">👤 አገልግሎት እፈልጋለሁ (ደንበኛ)</button>
+            <button class="btn" onclick="showForm('worker')">🛠️ ለሰራተኛ እመዝገብላለሁ (ሰራተኛ)</button>
+        </div>
+
+        <form id="worker-form" style="display: none;" onsubmit="submitworker(event)">
+            <h3>📋 ሰራተኛ ምዝገባ ፎርም</h3>
+            <input type="text" id="phone" placeholder="ስልክ ቁጥር (ምሳሌ፡ 09...)" required>
+            <select id="skill" required>
+                <option value="">ሙያ ይምረጡ</option>
+                <option value="technician">ቴክኒሻን</option>
+                <option value="plumber">ፕለምበር</option>
+                <option value="cleaner">ጽዳት</option>
+            </select>
+            <button type="submit" class="btn">ምዝገባ ጨርስ ✨</button>
+        </form>
     </div>
-
-    <form id="worker-form" style="display: none;" onsubmit="submitworker(event)">
-        <h3>ሰራተኛ ማስተዋወቂያ</h3>
-        <input type="text" id="phone" placeholder="ስልክ ቁጥር" required>
-        <select id="skill" required>
-            <option value="">ሙያ ይምረጡ</option>
-            <option value="technician">ቴክኒሻን</option>
-            <option value="plumber">ፕለምበር</option>
-            <option value="cleaner">ጽዳት</option>
-        </select>
-        <button type="submit" class="btn">ምዝገባ ጨርስ</button>
-    </form>
 
     <script>
         const tg = window.Telegram.WebApp;
@@ -40,8 +108,7 @@
             if (role === 'worker') {
                 document.getElementById('worker-form').style.display = 'block';
             } else if (role === 'client') {
-                alert('የደንበኛ አገልግሎት በቅርቡ ይጀመራል!');
-                location.reload();
+                tg.showAlert('የደንበኛ አገልግሎት በቅርቡ ይጀመራል!');
             }
         }
 
@@ -61,8 +128,7 @@
             });
 
             if (response.ok) {
-                tg.showAlert("ምዝገባ ተሳክቷል!");
-                // አፑ እንዳይዘጋ ተደርጓል፣ አስፈላጊ ከሆነ ቆይተው tg.close() ማድረግ ይቻላል
+                tg.showAlert("ምዝገባው በተሳካ ሁኔታ ተጠናቋል! 🎉");
             } else {
                 tg.showAlert("ምዝገባው አልተሳካም, እንደገና ይሞክሩ።");
             }
