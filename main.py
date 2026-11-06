@@ -6,7 +6,8 @@ from fastapi import FastAPI
 import asyncio
 
 BOT_TOKEN = "8627625987:AAHAG-4_nr7yDkbKIhR5F_6hZgKxOlGlS_w"
-https://et-service-bot.onrender.com
+WEBAPP_URL = "https://et-service-bot.onrender.com"
+
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
