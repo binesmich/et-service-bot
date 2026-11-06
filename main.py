@@ -3,15 +3,21 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+
 import asyncio
 
 BOT_TOKEN = "8627625987:AAHAG-4_nr7yDkbKIhR5F_6hZgKxOlGlS_w"
 WEBAPP_URL = "https://et-service-bot.onrender.com"
 
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
 app = FastAPI()
+dp = Dispatcher()
+
+@app.get("/", response_class=HTMLResponse)
+async def serve_index():
+    with open("index.html", "r", encoding="utf-8") as f:
+        return f.read()
 
 @dp.message(CommandStart())
 async def start_command(message: types.Message):
