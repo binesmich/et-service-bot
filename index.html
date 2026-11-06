@@ -477,4 +477,354 @@ const PRODUCTS = [
 ];
 
 const WORKERS = [
-  {id:1, name:'አበበ ከበደ', skill:'⚡ ኤሌክትሪሺ
+  {id:1, name:'አበበ ከበደ', skill:'⚡ ኤሌክትሪሺ<script>
+/* ===== TELEGRAM ===== */
+const tg = window.Telegram?.WebApp;
+let TG_USER = null;
+if (tg) {
+  tg.ready(); tg.expand();
+  TG_USER = tg.initDataUnsafe?.user;
+  if (TG_USER) {
+    const fullName = (TG_USER.first_name||'') + (TG_USER.last_name?' '+TG_USER.last_name:'');
+    document.getElementById('profileName').textContent = fullName || 'ተጠቃሚ';
+    document.getElementById('profileId').textContent = 'ID: ' + TG_USER.id;
+    document.getElementById('profileAvatar').textContent = (TG_USER.first_name||'👤').charAt(0).toUpperCase();
+  }
+}
+
+/* ===== STORAGE ===== */
+const STORAGE_KEY = 'et_gebeya_v2';
+
+function loadDB() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (Array.isArray(data.products) && Array.isArray(data.workers)) return data;
+    }
+  } catch(e) { console.error('loadDB:', e); }
+  return { products: [], workers: [] };
+}
+
+function saveDB() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); }
+  catch(e) { console.error('saveDB:', e); }
+}
+
+/* ===== SEED ===== */
+const SEED_PRODUCTS = [
+  {id:'p1', title:'iPhone 13 Pro', price:45000, category:'electronics', emoji:'📱', location:'አዲስ አበባ', rating:4.8, badge:'አዲስ', phone:'0911111111', description:'iPhone 13 Pro 256GB አዲስ'},
+  {id:'p2', title:'Samsung TV 55"', price:32000, category:'electronics', emoji:'📺', location:'ቦሌ', rating:4.5, phone:'0922222222', description:'Samsung Smart TV 4K'},
+  {id:'p3', title:'Nike ጫማ', price:4500, category:'clothing', emoji:'👟', location:'መርካቶ', rating:4.7, phone:'0933333333', description:'Nike Air Max ኦሪጅናል'},
+  {id:'p4', title:'የቤት ሶፋ', price:18000, category:'home', emoji:'🛋️', location:'ሲኤምሲ', rating:4.3, phone:'0944444444', description:'3 ሰው የሚቀመጥ ሶፋ'},
+  {id:'p5', title:'Toyota Corolla 2018', price:850000, category:'vehicles', emoji:'🚗', location:'አዲስ አበባ', rating:4.9, badge:'ልዩ', phone:'0955555555', description:'Toyota Corolla 2018 አዲስ'},
+  {id:'p6', title:'HP ላፕቶፕ', price:28000, category:'electronics', emoji:'💻', location:'ፒያሳ', rating:4.6, phone:'0966666666', description:'HP i5 8GB RAM'},
+  {id:'p7', title:'ጀኪት ብራንድ አዲስ', price:2200, category:'clothing', emoji:'🧥', location:'ሱመር', rating:4.4, phone:'0977777777', description:'የወንድ ጃኬት'},
+  {id:'p8', title:'ማዕድ ጠረጴዛ', price:6500, category:'home', emoji:'🪑', location:'ቦሌ', rating:4.2, phone:'0988888888', description:'የእንጨት ጠረጴዛ'}
+];
+
+const SEED_WORKERS = [
+  {id:'w1', name:'አበበ ከበደ', skill:'electrician', skillName:'⚡ ኤሌክትሪሺያን', phone:'0911223344', location:'አዲስ አበባ', rating:4.8},
+  {id:'w2', name:'ሰለሞን ተስፋዬ', skill:'plumber', skillName:'🚰 ቧንቧ ሰራተኛ', phone:'0922334455', location:'ቦሌ', rating:4.6},
+  {id:'w3', name:'ዳዊት መኮንን', skill:'carpenter', skillName:'🪚 አናጢ', phone:'0933445566', location:'መርካቶ', rating:4.7},
+  {id:'w4', name:'ማርታ አለሙ', skill:'cleaner', skillName:'🧹 ጽጌረዳ', phone:'0944556677', location:'ሲኤምሲ', rating:4.9}
+];
+
+/* ===== INIT DB ===== */
+let DB = loadDB();
+if (DB.products.length === 0 && DB.workers.length === 0) {
+  DB.products = [...SEED_PRODUCTS];
+  DB.workers = [...SEED_WORKERS];
+  saveDB();
+}
+
+/* ===== STATE ===== */
+let currentCategory = 'all';
+let currentSearch = '';
+
+/* ===== HELPERS ===== */
+function formatPrice(n) {
+  return Number(n).toLocaleString('en-US') + ' ብር';
+}
+
+function escapeHtml(s) {
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type||'');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = 'toast'; }, 2500);
+}
+
+function haptic(type) {
+  if (!tg?.HapticFeedback) return;
+  if (type === 'success') tg.HapticFeedback.notificationOccurred('success');
+  else if (type === 'error') tg.HapticFeedback.notificationOccurred('error');
+  else tg.HapticFeedback.impactOccurred('light');
+}
+
+/* ===== RENDER ===== */
+function productCardHTML(p) {
+  return `
+    <div class="card" onclick="showProductDetail('${p.id}')">
+      <div class="card-img">
+        ${p.badge ? `<span class="badge">${escapeHtml(p.badge)}</span>` : ''}
+        <span>${p.emoji||'📦'}</span>
+        <button class="del" onclick="event.stopPropagation();deleteProduct('${p.id}')">✕</button>
+      </div>
+      <div class="card-body">
+        <div class="card-title">${escapeHtml(p.title)}</div>
+        <div class="card-price">${formatPrice(p.price)}</div>
+        <div class="card-meta">📍 ${escapeHtml(p.location)}</div>
+        <div class="card-rating">⭐ ${p.rating||'4.5'}</div>
+      </div>
+    </div>`;
+}
+
+function workerCardHTML(w, compact) {
+  return `
+    <div class="worker-card">
+      <div class="avatar">${escapeHtml((w.name||'?').charAt(0))}</div>
+      <div class="worker-info">
+        <h4>${escapeHtml(w.name)}</h4>
+        <div class="skill">${escapeHtml(w.skillName||w.skill)}</div>
+        <div class="loc">📍 ${escapeHtml(w.location)}</div>
+      </div>
+      <div class="worker-actions">
+        <button class="btn-sm btn-call" onclick="callPhone('${escapeHtml(w.phone)}')">📞 ደውል</button>
+        ${compact ? '' : `<button class="btn-sm btn-view" onclick="deleteWorker('${w.id}')">🗑️</button>`}
+      </div>
+    </div>`;
+}
+
+function emptyHTML(emoji, text) {
+  return `<div class="empty"><div class="emoji">${emoji}</div><p>${text}</p></div>`;
+}
+
+function getFilteredProducts() {
+  let list = DB.products;
+  if (currentCategory !== 'all') list = list.filter(p => p.category === currentCategory);
+  if (currentSearch) {
+    const q = currentSearch.toLowerCase();
+    list = list.filter(p => (p.title||'').toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q));
+  }
+  return list;
+}
+
+function getFilteredWorkers() {
+  let list = DB.workers;
+  if (currentSearch) {
+    const q = currentSearch.toLowerCase();
+    list = list.filter(w => (w.name||'').toLowerCase().includes(q) || (w.skillName||'').toLowerCase().includes(q) || (w.skill||'').toLowerCase().includes(q));
+  }
+  return list;
+}
+
+function renderAll() {
+  const products = getFilteredProducts();
+  const workers = getFilteredWorkers();
+
+  document.getElementById('homeProducts').innerHTML =
+    products.length ? products.slice(0,4).map(productCardHTML).join('') : emptyHTML('📦','ምንም ምርት አልተገኘም');
+
+  document.getElementById('marketProducts').innerHTML =
+    products.length ? products.map(productCardHTML).join('') : emptyHTML('📦','ምንም ምርት አልተገኘም');
+
+  document.getElementById('homeWorkers').innerHTML =
+    workers.length ? workers.slice(0,2).map(w => workerCardHTML(w,false)).join('') : emptyHTML('👷','ሰራተኛ አልተገኘም');
+
+  document.getElementById('allWorkersList').innerHTML =
+    workers.length ? workers.map(w => workerCardHTML(w,false)).join('') : emptyHTML('👷','ሰራተኛ አልተገኘም');
+}
+
+/* ===== ACTIONS ===== */
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  haptic('light');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function setCategory(cat, el) {
+  currentCategory = cat;
+  document.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  haptic('light');
+  renderAll();
+}
+
+function handleSearch(q) {
+  currentSearch = q.trim();
+  renderAll();
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  haptic('light');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeBtn').textContent = isDark ? '🌙' : '☀️';
+  haptic('light');
+}
+
+function callPhone(phone) {
+  if (tg?.openLink) tg.openLink('tel:' + phone);
+  else window.location.href = 'tel:' + phone;
+  haptic('success');
+}
+
+function showProductDetail(id) {
+  const p = DB.products.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('detailContent').innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="detail-img">${p.emoji||'📦'}</div>
+    <div class="detail-title">${escapeHtml(p.title)}</div>
+    <div class="detail-price">${formatPrice(p.price)}</div>
+    <div class="detail-row"><span>ምድብ</span><span>${escapeHtml(p.category)}</span></div>
+    <div class="detail-row"><span>አድራሻ</span><span>${escapeHtml(p.location)}</span></div>
+    <div class="detail-row"><span>ስልክ</span><span>${escapeHtml(p.phone)}</span></div>
+    ${p.description ? `<div class="detail-row"><span>መግለጫ</span><span>${escapeHtml(p.description)}</span></div>` : ''}
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn-primary" onclick="callPhone('${escapeHtml(p.phone)}')">📞 ደውል</button>
+      <button class="btn-primary" style="background:var(--danger)" onclick="deleteProduct('${p.id}');closeModal('detailModal')">🗑️ አጥፋ</button>
+    </div>
+  `;
+  openModal('detailModal');
+}
+
+function deleteProduct(id) {
+  if (!confirm('ይህን ምርት ማጥፋት ትፈልጋለህ?')) return;
+  DB.products = DB.products.filter(p => p.id !== id);
+  saveDB();
+  renderAll();
+  showToast('ምርት ተጠፋ','success');
+  haptic('success');
+}
+
+function deleteWorker(id) {
+  if (!confirm('ይህን ሰራተኛ ማጥፋት ትፈልጋለህ?')) return;
+  DB.workers = DB.workers.filter(w => w.id !== id);
+  saveDB();
+  renderAll();
+  showToast('ሰራተኛ ተጠፋ','success');
+  haptic('success');
+}
+
+function clearData() {
+  if (!confirm('ሁሉንም ዳታ ማጥፋት ትፈልጋለህ? ምርቶችና ሰራተኞች ይጠፋሉ።')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  DB = { products: [], workers: [] };
+  saveDB();
+  renderAll();
+  showToast('ዳታ ተጠፋ','success');
+  haptic('success');
+}
+
+/* ===== FORMS ===== */
+document.getElementById('sellForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('sellBtn');
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form));
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div><span>በመላክ ላይ...</span>';
+  haptic('light');
+
+  await new Promise(r => setTimeout(r, 400));
+
+  const catEmojis = {electronics:'📱',clothing:'👕',home:'🏠',vehicles:'🚗',services:'🔧'};
+  const newProduct = {
+    id: 'p' + Date.now(),
+    title: data.title,
+    price: Number(data.price),
+    category: data.category,
+    emoji: catEmojis[data.category] || '📦',
+    phone: data.phone,
+    location: data.location,
+    description: data.description || '',
+    rating: (4 + Math.random()).toFixed(1),
+    badge: 'አዲስ'
+  };
+
+  DB.products.unshift(newProduct);
+  saveDB();
+  renderAll();
+
+  btn.disabled = false;
+  btn.innerHTML = '<span>📤 ምርት ላክ</span>';
+  form.reset();
+  closeModal('sellModal');
+  showToast('✅ ምርትህ ተለቀቀ!','success');
+  haptic('success');
+  switchPage('market');
+});
+
+document.getElementById('workerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('workerBtn');
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form));
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div><span>በመመዝገብ ላይ...</span>';
+  haptic('light');
+
+  await new Promise(r => setTimeout(r, 400));
+
+  const skillNames = {
+    electrician:'⚡ ኤሌክትሪሺያን',plumber:'🚰 ቧንቧ ሰራተኛ',
+    carpenter:'🪚 አናጢ',painter:'🎨 ቀለም ቀቢያ',
+    mason:'🧱 ግንበኛ',cleaner:'🧹 ጽጌረዳ'
+  };
+
+  const newWorker = {
+    id: 'w' + Date.now(),
+    name: data.name,
+    phone: data.phone,
+    skill: data.skill,
+    skillName: skillNames[data.skill] || data.skill,
+    location: data.location,
+    rating: (4 + Math.random()).toFixed(1)
+  };
+
+  DB.workers.unshift(newWorker);
+  saveDB();
+  renderAll();
+
+  btn.disabled = false;
+  btn.innerHTML = '<span>📝 ተመዝገብ</span>';
+  form.reset();
+  closeModal('workerModal');
+  showToast('✅ ምዝገባ ተሳክቷል!','success');
+  haptic('success');
+  switchPage('workers');
+});
+
+/* ===== INITIAL RENDER ===== */
+renderAll();
+
+/* ===== PREVENT BODY SCROLL WHEN MODAL OPEN ===== */
+const observer = new MutationObserver(() => {
+  const anyOpen = document.querySelector('.modal-overlay.open');
+  document.body.style.overflow = anyOpen ? 'hidden' : '';
+});
+document.querySelectorAll('.modal-overlay').forEach(m => observer.observe(m, {attributes:true, attributeFilter:['class']}));
+
+console.log('✅ ET-Gebeya ተጀመረ');
+</script>
+</body>
+</html>
